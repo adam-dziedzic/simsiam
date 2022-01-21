@@ -1,0 +1,3 @@
+python main_lincls.py   -a resnet50   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0   --pretrained models/checkpoint_0099.pth.tar   --lars /home/nicolas/data/imagenet
+
+
