@@ -411,6 +411,26 @@ def main_worker(gpu, ngpus_per_node, args):
             test_dataset, batch_size=args.batch_size, shuffle=False,
             num_workers=args.workers)
 
+    elif args.dataset_name == 'stl10':
+
+        transform_stl10 = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(224),
+        ])
+
+        train_dataset = datasets.STL10(
+            f'{prefix}/home/{user}/data/stl10', split='train',
+            download=True, transform=transform_stl10)
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=args.batch_size, num_workers=args.workers,
+            drop_last=False, shuffle=True)
+        test_dataset = datasets.STL10(
+            f'{prefix}/home/{user}/data/stl10', split='test', download=True,
+            transform=transform_stl10)
+        val_loader = torch.utils.data.DataLoader(
+            test_dataset, batch_size=2 * args.batch_size,
+            num_workers=args.workers, drop_last=False, shuffle=False)
+
     else:
         raise Exception(f"Unknown args.dataset_name: {args.dataset_name}.")
 
