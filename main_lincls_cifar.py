@@ -372,7 +372,7 @@ def main_worker(gpu, ngpus_per_node, args):
             download=False, transform=transform_svhn)
         train_loader = torch.utils.data.DataLoader(
             train_dataset, batch_size=args.batch_size,
-            num_workers=args.workders, drop_last=False, shuffle=True)
+            num_workers=args.workers, drop_last=False, shuffle=True)
         test_dataset = datasets.SVHN(
             f'{prefix}/home/{user}/data/svhn', split='test', download=False,
             transform=transform_svhn)
