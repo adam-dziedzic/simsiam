@@ -15,3 +15,7 @@ python main_lincls_cifar.py -a resnet50 --dist-url 'tcp://localhost:10001' --mul
 
 timestamp=$(date +%Y-%m-%d-%H-%M-%S-%N)
 python main_lincls_cifar.py -a resnet50 --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0  --pretrained models/checkpoint_0099-batch256.pth.tar --lars --lr 1.0 --batch-size 256 --data /home/nicolas/data/imagenet --start-epoch 0 --epochs 300 --dataset_name svhn 2>&1 | tee -a outfile_${timestamp}.log
+
+
+timestamp=$(date +%Y-%m-%d-%H-%M-%S-%N)
+python main_lincls_cifar.py -a resnet50 --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0  --pretrained models/checkpoint_0099-batch256.pth.tar --lars --lr 1.0 --batch-size 256 --data /home/nicolas/data/imagenet --start-epoch 0 --epochs 300 --dataset_name stl10 2>&1 | tee -a outfile_${timestamp}.log

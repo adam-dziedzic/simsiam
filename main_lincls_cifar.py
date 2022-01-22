@@ -188,7 +188,7 @@ def main_worker(gpu, ngpus_per_node, args):
         args.num_classes = 1000
     elif args.dataset_name in ['cifar100']:
         args.num_classes = 100
-    elif args.dataset_name in ['cifar10', 'svhn']:
+    elif args.dataset_name in ['cifar10', 'svhn', 'stl10']:
         args.num_classes = 10
     model = models.__dict__[args.arch](num_classes=args.num_classes)
 
