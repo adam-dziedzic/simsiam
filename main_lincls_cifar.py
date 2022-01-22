@@ -5,6 +5,8 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import getpass
+
 import argparse
 import builtins
 import math
@@ -12,8 +14,6 @@ import os
 import random
 import shutil
 import time
-import warnings
-
 import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -26,6 +26,16 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
+import warnings
+
+from utils import print_args
+
+user = getpass.getuser()
+
+if user == 'ahmad':
+    prefix = '/ssd003'
+else:
+    prefix = ''
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -33,7 +43,7 @@ model_names = sorted(name for name in models.__dict__
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR',
-                    default='/home/nicolas/data/imagenet',
+                    default=f'{prefix}/home/{user}/data/imagenet',
                     help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
                     choices=model_names,
@@ -112,6 +122,8 @@ best_acc1 = 0
 def main():
     args = parser.parse_args()
 
+    print_args(args=args)
+
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -172,7 +184,13 @@ def main_worker(gpu, ngpus_per_node, args):
         torch.distributed.barrier()
     # create model
     print("=> creating model '{}'".format(args.arch))
-    model = models.__dict__[args.arch](num_classes=10)
+    if args.dataset_name == 'imagenet':
+        args.num_classes = 1000
+    elif args.dataset_name in ['cifar100']:
+        args.num_classes = 100
+    elif args.dataset_name in ['cifar10', 'svhn']:
+        args.num_classes = 10
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
 
     # freeze all layers but the last fc
     for name, param in model.named_parameters():
@@ -310,35 +328,57 @@ def main_worker(gpu, ngpus_per_node, args):
 
     elif args.dataset_name == 'cifar10':
         transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
+            transforms.Resize(224),
+            # transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465),
                                  (0.2023, 0.1994, 0.2010)),
-            transforms.Resize(224),
         ])
 
         transform_test = transforms.Compose([
             transforms.ToTensor(),
+            transforms.Resize(224),
             transforms.Normalize((0.4914, 0.4822, 0.4465),
                                  (0.2023, 0.1994, 0.2010)),
-            transforms.Resize(224),
         ])
 
         train_dataset = datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=transform_train)
+            root=f'{prefix}/home/{user}/data/cifar10', train=True,
+            download=True, transform=transform_train)
         trainloader = torch.utils.data.DataLoader(
             train_dataset, batch_size=args.batch_size, shuffle=True,
             num_workers=args.workers)
 
         test_dataset = datasets.CIFAR10(
-            root='./data', train=False, download=True, transform=transform_test)
+            root=f'{prefix}/home/{user}/data/cifar10', train=False,
+            download=True, transform=transform_test)
         val_loader = torch.utils.data.DataLoader(
             test_dataset, batch_size=args.batch_size, shuffle=False,
             num_workers=args.workers)
 
         classes = ('plane', 'car', 'bird', 'cat', 'deer',
                    'dog', 'frog', 'horse', 'ship', 'truck')
+
+    elif args.dataset_name == 'svhn':
+
+        transform_svhn = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(224),
+        ])
+
+        train_dataset = datasets.SVHN(
+            root=f'{prefix}/home/{user}/data/svhn', split='train',
+            download=False, transform=transform_svhn)
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=args.batch_size,
+            num_workers=args.workders, drop_last=False, shuffle=True)
+        test_dataset = datasets.SVHN(
+            f'{prefix}/home/{user}/data/svhn', split='test', download=False,
+            transform=transform_svhn)
+        val_loader = torch.utils.data.DataLoader(
+            test_dataset, batch_size=args.batch_size, shuffle=False,
+            num_workers=args.workers)
 
     else:
         raise Exception(f"Unknown args.dataset_name: {args.dataset_name}.")
