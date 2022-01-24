@@ -431,6 +431,35 @@ def main_worker(gpu, ngpus_per_node, args):
             test_dataset, batch_size=2 * args.batch_size,
             num_workers=args.workers, drop_last=False, shuffle=False)
 
+    elif args.dataset_name == 'caltech101':
+        # https://colab.research.google.com/github/ashishpatel26/Awesome-Pytorch-Tutorials/blob/main/17.Pytorch%20Transfer%20learning%20with%20Caltech101.ipynb#scrollTo=8be0ysxctuEw
+        train_transforms = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225]),
+        ])
+
+        val_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225]),
+        ])
+
+        train_dataset = datasets.Caltech101(
+            f'{prefix}/home/{user}/data/caltech101', target_type='category',
+            download=True, transform=train_transforms)
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=args.batch_size, num_workers=args.workers,
+            drop_last=False, shuffle=True)
+
+        val_loader = torch.utils.data.DataLoader(
+            test_dataset, batch_size=2 * args.batch_size,
+            num_workers=args.workers, drop_last=False, shuffle=False)
+
     else:
         raise Exception(f"Unknown args.dataset_name: {args.dataset_name}.")
 
